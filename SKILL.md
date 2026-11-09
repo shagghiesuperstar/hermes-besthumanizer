@@ -7,6 +7,12 @@ description: Use when text must read as human, or when you must prove a rewrite 
 
 Two tools do the work, and the order matters: **measure, then rewrite, then measure again.**
 
+## The hook
+
+The plugin also registers `transform_tool_result`. On a post/send/publish-shaped tool call it
+scores the text being shipped (free, deterministic) and appends a one-line verdict when the
+score is under 80. It annotates the result; it never edits the outbound text.
+
 ## The loop
 
 1. `score_text` on the passage. It returns `human_probability` (0-100, higher is more human)
