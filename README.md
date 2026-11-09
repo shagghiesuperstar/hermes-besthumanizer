@@ -1,0 +1,45 @@
+# besthumanizer for Hermes Agent
+
+Three tools over MCP: measure how machine-written a passage reads, rewrite it so it doesn't, and
+score a public X account's recent posts.
+
+```bash
+hermes plugins install shagghiesuperstar/hermes-besthumanizer --enable
+export BESTHUMANIZER_API_KEY=bh_live_...   # from https://besthumanizer.app/account
+```
+
+## Tools
+
+| tool | what it does | cost |
+|---|---|---|
+| `score_text` | 0-100 human-probability, plus each pattern found and the span that fired it | free, deterministic, no model |
+| `humanize_text` | removes the tells, runs a constrained model pass, re-scans; never returns text scoring lower than the input | meters input words |
+| `score_x_account` | median score, distribution and per-post evidence for a public account | free, deterministic |
+
+Scoring is measured, not decorative: same input, same number, every time. That is what makes the
+before/after pair meaningful — you can check the rewrite rather than trust it.
+
+## Contract
+
+`humanize_text` measures the document before and after and ships whichever of {your text, the
+mechanical pass, the model pass} reads most human. On text that already reads human it hands your
+text back and says so in `llm` (`already read human, left as written`). A humanizer that makes
+good prose worse is the failure mode this exists to prevent.
+
+## Transport
+
+The plugin is a thin MCP client: every call is one JSON-RPC `tools/call` against
+`https://besthumanizer.app/mcp` with `Authorization: Bearer $BESTHUMANIZER_API_KEY`. No REST
+dialect, no local scoring code. Set `BESTHUMANIZER_URL` to point at a self-hosted instance.
+
+Prefer plain MCP to a plugin? Same endpoint, no install:
+
+```yaml
+mcp_servers:
+  besthumanizer:
+    url: "https://besthumanizer.app/mcp"
+    headers:
+      Authorization: "Bearer bh_live_..."
+```
+
+OAuth 2.1 with PKCE is also supported at the same URL for clients that require it.

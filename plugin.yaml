@@ -1,0 +1,17 @@
+name: besthumanizer
+version: 0.1.0
+manifest_version: 2
+description: >-
+  Humanize and measure text over MCP: rewrite AI-sounding prose, score any text
+  for machine-likeness, and score a public X account's posts. Scoring is
+  deterministic and free; the rewrite is metered.
+author: shagghiesuperstar
+license: MIT
+homepage: https://besthumanizer.app
+tags: [writing, mcp, humanize, detector, x]
+provides_tools:
+  - humanize_text
+  - score_text
+  - score_x_account
+requires_env:
+  - BESTHUMANIZER_API_KEY
