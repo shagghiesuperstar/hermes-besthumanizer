@@ -26,6 +26,19 @@ mechanical pass, the model pass} reads most human. On text that already reads hu
 text back and says so in `llm` (`already read human, left as written`). A humanizer that makes
 good prose worse is the failure mode this exists to prevent.
 
+## The hook
+
+Installing the plugin also extends Hermes's tool pipeline: `transform_tool_result` inspects any
+post/send/publish-shaped tool call (X posts, DMs, email, comments), scores the text being shipped
+with the free deterministic scorer, and appends a one-line verdict when it reads under 80/100:
+
+```
+[besthumanizer] before this goes out: reads 17/100 human … Firing: significance-inflation, ai-vocabulary
+```
+
+It costs no words and no model, so it runs on every send. It only annotates — it never rewrites
+what you already committed to, because a hook that silently edits an outbound message is a bug.
+
 ## Transport
 
 The plugin is a thin MCP client: every call is one JSON-RPC `tools/call` against

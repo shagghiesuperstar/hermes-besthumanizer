@@ -191,6 +191,60 @@ def score_x_account(handle: str = "", limit: int = 25, **_: Any) -> dict[str, An
     return _call_tool("score_x_account", {"handle": handle, "limit": int(limit or 25)})
 
 
+# ------------------------------------------------------------------- hook
+
+# Tool names whose arguments carry text that is about to leave the machine.
+_SHIPPING = (
+    "post", "tweet", "reply", "send", "publish", "dm", "email", "message", "comment", "submit",
+)
+_WORD_MIN = 40      # shorter than this, a score is noise
+_SCORE_FLOOR = 80   # at or above this, say nothing
+
+
+def _text_from(args: Any) -> str:
+    """The longest string in a tool call's arguments, if it looks like prose."""
+    if not isinstance(args, dict):
+        return ""
+    best = ""
+    for value in args.values():
+        if isinstance(value, str) and len(value.split()) > len(best.split()):
+            best = value
+    return best if len(best.split()) >= _WORD_MIN else ""
+
+
+def _on_transform_tool_result(tool_name: str = "", args: Any = None, result: Any = None, **_: Any) -> Any:
+    """Score outgoing text before it ships, and say so in the tool result.
+
+    Fires on send/post/publish-shaped calls only, uses the free deterministic
+    scorer, and returns None (leaving the result untouched) on anything
+    unexpected — a hook must never break a turn over a nicety.
+    """
+    try:
+        if not _available():
+            return None
+        name = str(tool_name or "").lower()
+        if not any(word in name for word in _SHIPPING):
+            return None
+        text = _text_from(args)
+        if not text:
+            return None
+        scored = _call_tool("score_text", {"text": text})
+        score = scored.get("human_probability")
+        if not isinstance(score, int) or score >= _SCORE_FLOOR:
+            return None
+        tells = scored.get("detected_patterns") or []
+        return (
+            f"{result if isinstance(result, str) else json.dumps(result)}\n\n"
+            f"[besthumanizer] before this goes out: reads {score}/100 human "
+            f"(under {_SCORE_FLOOR} means the tells are still showing). "
+            f"Firing: {', '.join(str(t) for t in tells[:4]) or 'none named'}. "
+            f"humanize_text on the same passage rewrites it and reports both scores."
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.debug("besthumanizer: result hook skipped (%s)", exc)
+        return None
+
+
 # ---------------------------------------------------------------- manifest
 
 def register(ctx) -> None:
@@ -201,6 +255,7 @@ def register(ctx) -> None:
     ):
         ctx.register_tool(name=name, toolset=PLUGIN, schema=schema, handler=handler,
                           check_fn=_available, emoji=emoji)
+    ctx.register_hook("transform_tool_result", _on_transform_tool_result)
     try:
         ctx.register_skill(PLUGIN, Path(__file__).with_name("SKILL.md"),
                            description="When to humanize, when to just score, and how to prove a rewrite helped.")

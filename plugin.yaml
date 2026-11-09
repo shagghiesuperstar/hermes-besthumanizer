@@ -13,5 +13,7 @@ provides_tools:
   - humanize_text
   - score_text
   - score_x_account
+provides_hooks:
+  - transform_tool_result
 requires_env:
   - BESTHUMANIZER_API_KEY
