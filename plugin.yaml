@@ -1,6 +1,7 @@
 name: besthumanizer
-version: 0.1.0
+version: 0.2.0
 manifest_version: 2
+requires_hermes: ">=0.21.0"
 description: >-
   Humanize and measure text over MCP: rewrite AI-sounding prose, score any text
   for machine-likeness, and score a public X account's posts. Scoring is

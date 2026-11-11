@@ -1,5 +1,7 @@
 # besthumanizer for Hermes Agent
 
+![besthumanizer](assets/banner.png)
+
 Three tools over MCP: measure how machine-written a passage reads, rewrite it so it doesn't, and
 score a public X account's recent posts.
 
@@ -7,6 +9,12 @@ score a public X account's recent posts.
 hermes plugins install shagghiesuperstar/hermes-besthumanizer --enable
 export BESTHUMANIZER_API_KEY=bh_live_...   # from https://besthumanizer.app/account
 ```
+
+Requires Hermes `>=0.21.0` (tools + the `transform_tool_result` hook). Under Hermes the key is
+read through the active profile's secret scope, so a multiplexed fleet can't pick up another
+profile's key; outside Hermes it falls back to the environment variable.
+
+![score_text in Hermes](assets/score.png)
 
 ## Tools
 
@@ -56,3 +64,11 @@ mcp_servers:
 ```
 
 OAuth 2.1 with PKCE is also supported at the same URL for clients that require it.
+
+## Tests
+
+`python tests/test_hook.py` — ten assertions over the hook contract, no network and no Hermes
+needed: silent without a key, annotates a low-scoring send, leaves already-human text alone,
+ignores non-shipping tools and short text, never raises into a turn, and reads the key through
+`agent.secret_scope` when Hermes provides one. CI runs it on 3.10 and 3.12.
+

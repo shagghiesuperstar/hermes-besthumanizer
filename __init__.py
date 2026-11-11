@@ -42,6 +42,20 @@ def _url() -> str:
 
 
 def _key() -> str:
+    """The API key, read through Hermes's secret scope when it is available.
+
+    A bare ``os.environ`` read is wrong under profile multiplexing: the variable can
+    belong to another profile's ``.env``. ``secret_scope`` resolves against the
+    active profile, and the env fallback keeps the module usable outside Hermes.
+    """
+    try:
+        from agent.secret_scope import get_secret
+
+        value = str(get_secret("BESTHUMANIZER_API_KEY") or "").strip()
+        if value:
+            return value
+    except Exception:  # not running under Hermes, or a build without the scope
+        log.debug("besthumanizer: secret scope unavailable, falling back to the environment")
     return os.environ.get("BESTHUMANIZER_API_KEY", "").strip()
 
 

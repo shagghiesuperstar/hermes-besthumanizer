@@ -1,6 +1,6 @@
 [project]
 name = "hermes-besthumanizer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Humanize and measure text over MCP from Hermes Agent"
 requires-python = ">=3.10"
 license = { text = "MIT" }
